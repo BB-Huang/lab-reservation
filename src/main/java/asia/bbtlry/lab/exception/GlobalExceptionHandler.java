@@ -5,6 +5,7 @@ import asia.bbtlry.lab.common.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @Slf4j
 @RestControllerAdvice
@@ -20,5 +21,11 @@ public class GlobalExceptionHandler {
         log.error("未处理异常", e);
         return Result.error(ErrorCode.INTERNAL_ERROR.getCode(),
                 ErrorCode.INTERNAL_ERROR.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Result<Void> handleNoResourceFound(NoResourceFoundException e) {
+        return Result.error(ErrorCode.NOT_FOUND.getCode(),
+                ErrorCode.NOT_FOUND.getMessage());
     }
 }
