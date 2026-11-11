@@ -1,5 +1,6 @@
 package asia.bbtlry.lab.controller;
 
+import asia.bbtlry.lab.common.Result;
 import asia.bbtlry.lab.entity.DeviceCategory;
 import asia.bbtlry.lab.mapper.DeviceCategoryMapper;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,7 @@ public class CategoryController {
     }
 
     @GetMapping
-    public List<DeviceCategory> list() {
-        return mapper.selectList(null);
+    public Result<List<DeviceCategory>> list() {
+        return Result.success(mapper.selectList(null));
     }
 }
