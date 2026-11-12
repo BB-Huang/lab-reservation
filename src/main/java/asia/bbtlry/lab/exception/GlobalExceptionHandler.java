@@ -3,6 +3,7 @@ package asia.bbtlry.lab.exception;
 import asia.bbtlry.lab.common.ErrorCode;
 import asia.bbtlry.lab.common.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -27,5 +28,14 @@ public class GlobalExceptionHandler {
     public Result<Void> handleNoResourceFound(NoResourceFoundException e) {
         return Result.error(ErrorCode.NOT_FOUND.getCode(),
                 ErrorCode.NOT_FOUND.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<Void> handleValidation(MethodArgumentNotValidException e) {
+        String message = ErrorCode.INVALID_PARAM.getMessage();
+        if (e.getBindingResult().getFieldError() != null) {
+            message = e.getBindingResult().getFieldError().getDefaultMessage();
+        }
+        return Result.error(ErrorCode.INVALID_PARAM.getCode(), message);
     }
 }
