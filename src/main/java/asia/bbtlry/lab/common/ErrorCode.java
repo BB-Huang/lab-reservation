@@ -8,7 +8,9 @@ public enum ErrorCode {
     INVALID_PARAM(40001, "参数错误"),
     USERNAME_EXISTS(40002, "用户名已存在"),
     UNAUTHORIZED(40101, "未登录或 token 无效"),
+    LOGIN_FAILED(40102,"用户名或密码错误"),
     FORBIDDEN(40301, "无权访问该资源"),
+    ACCOUNT_DISABLED(40302,"账号已被禁用"),
     NOT_FOUND(40401, "资源不存在"),
     CONFLICT(40901, "该时段已被预约"),
 

@@ -1,6 +1,8 @@
 package asia.bbtlry.lab.controller;
 
 import asia.bbtlry.lab.common.Result;
+import asia.bbtlry.lab.dto.LoginRequest;
+import asia.bbtlry.lab.dto.LoginResponse;
 import asia.bbtlry.lab.dto.RegisterRequest;
 import asia.bbtlry.lab.service.AuthService;
 import jakarta.validation.Valid;
@@ -23,5 +25,10 @@ public class AuthController {
     public Result<Long> register(@RequestBody @Valid RegisterRequest request)
     {
         return Result.success(authService.register(request));
+    }
+
+    @PostMapping("/login")
+    public Result<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        return Result.success(authService.login(request));
     }
 }
