@@ -19,13 +19,13 @@
 
 | 层 | 选型 | 为什么 |
 | --- | --- | --- |
-| JDK | 17 (LTS) | Spring Boot 3 的最低要求，长期支持 |
-| 框架 | Spring Boot 3.2 | 主流后端框架，生态完整 |
-| 安全 | Spring Security 6 + JWT | 无状态认证，面试高频 |
-| ORM | MyBatis-Plus 3.5 | 国内后端主流，减少样板代码 |
+| JDK | 17 (LTS) | Spring Boot 4 要求 Java 17+，长期支持 |
+| 框架 | Spring Boot 4.1.2 | 主流后端框架，生态完整 |
+| 安全 | Spring Security 7 + JWT（JJWT 0.13） | 无状态认证，面试高频 |
+| ORM | MyBatis-Plus 3.5.18（boot4 starter） | 国内后端主流，减少样板代码 |
 | 数据库 | MySQL 8.0 | 预约数据需要事务与强一致 |
 | 缓存 / 锁 | Redis + Redisson | 分布式锁解决并发抢约 |
-| 接口文档 | Knife4j | 自动生成，调试方便 |
+| 接口文档 | SpringDoc 3.2.0 (Swagger UI) | 自动生成，调试方便；Knife4j 暂不支持 Boot 4 |
 | 部署 | Docker Compose | 一条命令起 MySQL + Redis |
 | 构建 | Maven | — |
 
@@ -65,17 +65,40 @@ WHERE device_id = #{deviceId}
 ## 本地运行
 
 ```bash
+# 1. 起 MySQL + Redis
 docker compose up -d
-docker exec -it lab-mysql mysql -uroot -proot123 -e "show databases;"
+
+# 2. 建表（首次或重建环境时执行）
+docker exec -i lab-mysql mysql --default-character-set=utf8mb4 \
+  -uroot -proot123 lab_reservation < sql/schema.sql
+
+# 3. 启动应用
+./mvnw spring-boot:run
+
+# 4. 接口文档：http://localhost:8080/swagger-ui.html
 ```
 
 MySQL 首次启动需要 20–40 秒。默认账号仅用于本地开发，不要用于生产环境。
+
+> **安全提醒:** `application.yml` 中的 JWT secret 仅用于本地开发，生产环境必须通过环境变量注入，不能提交到仓库。
+
+## 已完成接口
+
+| 方法 | 路径 | 说明 | 认证 |
+| --- | --- | --- | --- |
+| GET | `/api/ping` | 健康检查 | 公开 |
+| POST | `/api/auth/register` | 注册 | 公开 |
+| POST | `/api/auth/login` | 登录，返回 JWT | 公开 |
+| GET | `/api/users/me` | 当前用户信息 | `Authorization: Bearer <token>` |
+| GET | `/api/categories` | 分类列表 | 需 token |
+
+除公开接口外，请求头需带 `Authorization: Bearer <token>`。
 
 ## 里程碑
 
 | 周 | 内容 | 状态 |
 | --- | --- | --- |
-| 第 1 周 | 环境 + 用户模块（注册 / 登录 / JWT） | 🚧 |
+| 第 1 周 | 环境 + 用户模块（注册 / 登录 / JWT） | ✅ 完成 |
 | 第 2 周 | 设备 + 分类 + 权限 | ⬜ |
 | 第 3 周 | 预约 + 冲突检测 + 分布式锁 + 审批 | ⬜ |
 | 第 4 周 | 统计 + 部署 + 压测 + 文档 | ⬜ |
