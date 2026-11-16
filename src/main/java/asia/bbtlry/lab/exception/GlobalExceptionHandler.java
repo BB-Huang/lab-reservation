@@ -3,8 +3,11 @@ package asia.bbtlry.lab.exception;
 import asia.bbtlry.lab.common.ErrorCode;
 import asia.bbtlry.lab.common.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -37,5 +40,12 @@ public class GlobalExceptionHandler {
             message = e.getBindingResult().getFieldError().getDefaultMessage();
         }
         return Result.error(ErrorCode.INVALID_PARAM.getCode(), message);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result<Void> handleAccessDenied(AccessDeniedException e) {
+        return Result.error(ErrorCode.FORBIDDEN.getCode(),
+                ErrorCode.FORBIDDEN.getMessage());
     }
 }

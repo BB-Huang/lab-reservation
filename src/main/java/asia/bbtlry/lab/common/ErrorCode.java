@@ -13,6 +13,7 @@ public enum ErrorCode {
     ACCOUNT_DISABLED(40302,"账号已被禁用"),
     NOT_FOUND(40401, "资源不存在"),
     CONFLICT(40901, "该时段已被预约"),
+    CATEGORY_EXISTS(40003, "分类已存在"),
 
     // 5xxxx：服务端错误
     INTERNAL_ERROR(50001, "服务器内部错误");
