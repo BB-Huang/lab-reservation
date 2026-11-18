@@ -3,29 +3,28 @@ package asia.bbtlry.lab.controller;
 import asia.bbtlry.lab.common.Result;
 import asia.bbtlry.lab.dto.DeviceCreateRequest;
 import asia.bbtlry.lab.entity.Device;
-import asia.bbtlry.lab.mapper.DeviceMapper;
 import asia.bbtlry.lab.service.DeviceService;
+import asia.bbtlry.lab.vo.PageResult;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/devices")
 public class DeviceController {
-
-    private final DeviceMapper deviceMapper;
     private final DeviceService deviceService;
 
-    public DeviceController(DeviceMapper deviceMapper, DeviceService deviceService) {
-        this.deviceMapper = deviceMapper;
+    public DeviceController(DeviceService deviceService) {
         this.deviceService = deviceService;
     }
 
     @GetMapping
-    public Result<List<Device>> list() {
-        return Result.success(deviceMapper.selectList(null));
+    public Result<PageResult<Device>> list(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String keyword) {
+                return Result.success(deviceService.page(page, size, categoryId, keyword));
     }
 
     @PostMapping
