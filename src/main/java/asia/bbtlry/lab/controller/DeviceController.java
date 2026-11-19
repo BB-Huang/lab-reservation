@@ -2,6 +2,7 @@ package asia.bbtlry.lab.controller;
 
 import asia.bbtlry.lab.common.Result;
 import asia.bbtlry.lab.dto.DeviceCreateRequest;
+import asia.bbtlry.lab.dto.DeviceUpdateRequest;
 import asia.bbtlry.lab.entity.Device;
 import asia.bbtlry.lab.service.DeviceService;
 import asia.bbtlry.lab.vo.PageResult;
@@ -24,7 +25,7 @@ public class DeviceController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) String keyword) {
-                return Result.success(deviceService.page(page, size, categoryId, keyword));
+        return Result.success(deviceService.page(page, size, categoryId, keyword));
     }
 
     @PostMapping
@@ -36,5 +37,19 @@ public class DeviceController {
     @GetMapping("/{id}")
     public Result<Device> detail(@PathVariable Long id) {
         return Result.success(deviceService.getById(id));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> update(@PathVariable Long id, @RequestBody @Valid DeviceUpdateRequest request) {
+        deviceService.update(id, request);
+        return Result.success();
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Result<Void> delete(@PathVariable Long id) {
+        deviceService.delete(id);
+        return Result.success();
     }
 }

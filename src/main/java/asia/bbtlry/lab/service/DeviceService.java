@@ -2,6 +2,7 @@ package asia.bbtlry.lab.service;
 
 import asia.bbtlry.lab.common.ErrorCode;
 import asia.bbtlry.lab.dto.DeviceCreateRequest;
+import asia.bbtlry.lab.dto.DeviceUpdateRequest;
 import asia.bbtlry.lab.entity.Device;
 import asia.bbtlry.lab.exception.BusinessException;
 import asia.bbtlry.lab.mapper.DeviceCategoryMapper;
@@ -11,6 +12,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Set;
 
 @Service
 public class DeviceService {
@@ -63,5 +66,36 @@ public class DeviceService {
 
         Page<Device> result = deviceMapper.selectPage(new Page<>(page, size), wrapper);
         return new PageResult<>(result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    private static final Set<String> ALLOWED_STATUS = Set.of("AVAILABLE", "MAINTENANCE", "RETIRED");
+
+    public void update(Long id, DeviceUpdateRequest request) {
+        Device device = deviceMapper.selectById(id);
+        if (device == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (categoryMapper.selectById(request.getCategoryId()) == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!ALLOWED_STATUS.contains(request.getStatus())) {
+            throw new BusinessException(ErrorCode.DEVICE_STATUS_INVALID);
+        }
+
+        device.setName(request.getName());
+        device.setModel(request.getModel());
+        device.setCategoryId(request.getCategoryId());
+        device.setLabRoom(request.getLabRoom());
+        device.setDescription(request.getDescription());
+        device.setStatus(request.getStatus());
+
+        deviceMapper.updateById(device);
+    }
+
+    public void delete(Long id) {
+        if (deviceMapper.selectById(id) == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        deviceMapper.deleteById(id);
     }
 }

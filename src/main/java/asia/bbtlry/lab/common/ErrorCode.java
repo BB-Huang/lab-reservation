@@ -7,6 +7,7 @@ public enum ErrorCode {
     // 4xxxx：客户端错误
     INVALID_PARAM(40001, "参数错误"),
     USERNAME_EXISTS(40002, "用户名已存在"),
+    DEVICE_STATUS_INVALID(40004,"设备状态不合法"),
     UNAUTHORIZED(40101, "未登录或 token 无效"),
     LOGIN_FAILED(40102,"用户名或密码错误"),
     FORBIDDEN(40301, "无权访问该资源"),
