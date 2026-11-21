@@ -89,8 +89,17 @@ MySQL 首次启动需要 20–40 秒。默认账号仅用于本地开发，不�
 | GET | `/api/ping` | 健康检查 | 公开 |
 | POST | `/api/auth/register` | 注册 | 公开 |
 | POST | `/api/auth/login` | 登录，返回 JWT | 公开 |
-| GET | `/api/users/me` | 当前用户信息 | `Authorization: Bearer <token>` |
-| GET | `/api/categories` | 分类列表 | 需 token |
+| GET | `/api/users/me` | 当前用户信息 | 登录 |
+| GET | `/api/categories` | 分类列表 | 登录 |
+| POST | `/api/categories` | 新增分类 | 管理员 |
+| PUT | `/api/categories/{id}` | 修改分类 | 管理员 |
+| DELETE | `/api/categories/{id}` | 删除分类 | 管理员 |
+| GET | `/api/devices` | 设备分页（`page` / `size` / `categoryId` / `keyword`） | 登录 |
+| POST | `/api/devices` | 新增设备 | 管理员 |
+| GET | `/api/devices/{id}` | 设备详情 | 登录 |
+| PUT | `/api/devices/{id}` | 修改设备 | 管理员 |
+| DELETE | `/api/devices/{id}` | 删除设备 | 管理员 |
+| GET | `/api/devices/{id}/availability?date=YYYY-MM-DD` | 某日已占用时段 | 登录 |
 
 除公开接口外，请求头需带 `Authorization: Bearer <token>`。
 
@@ -99,6 +108,6 @@ MySQL 首次启动需要 20–40 秒。默认账号仅用于本地开发，不�
 | 周 | 内容 | 状态 |
 | --- | --- | --- |
 | 第 1 周 | 环境 + 用户模块（注册 / 登录 / JWT） | ✅ 完成 |
-| 第 2 周 | 设备 + 分类 + 权限 | ⬜ |
+| 第 2 周 | 设备 + 分类 + 权限 | ✅ 完成 |
 | 第 3 周 | 预约 + 冲突检测 + 分布式锁 + 审批 | ⬜ |
 | 第 4 周 | 统计 + 部署 + 压测 + 文档 | ⬜ |
