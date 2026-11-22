@@ -15,6 +15,7 @@ public enum ErrorCode {
     NOT_FOUND(40401, "资源不存在"),
     CONFLICT(40901, "该时段已被预约"),
     CATEGORY_EXISTS(40003, "分类已存在"),
+    DEVICE_UNAVAILABLE(40005, "设备当前不可预约"),
 
     // 5xxxx：服务端错误
     INTERNAL_ERROR(50001, "服务器内部错误");

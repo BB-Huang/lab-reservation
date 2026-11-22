@@ -1,6 +1,11 @@
 package asia.bbtlry.lab.service;
 
+import asia.bbtlry.lab.common.ErrorCode;
+import asia.bbtlry.lab.dto.CreateReservationRequest;
+import asia.bbtlry.lab.entity.Device;
 import asia.bbtlry.lab.entity.Reservation;
+import asia.bbtlry.lab.exception.BusinessException;
+import asia.bbtlry.lab.mapper.DeviceMapper;
 import asia.bbtlry.lab.mapper.ReservationMapper;
 import asia.bbtlry.lab.vo.TimeSlotVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -14,9 +19,38 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationMapper reservationMapper;
+    private final DeviceMapper deviceMapper;
 
-    public ReservationService(ReservationMapper reservationMapper) {
+    public ReservationService(ReservationMapper reservationMapper, DeviceMapper deviceMapper) {
         this.reservationMapper = reservationMapper;
+        this.deviceMapper = deviceMapper;
+    }
+
+    public Long create(CreateReservationRequest request, Long userId) {
+        Device device = deviceMapper.selectById(request.getDeviceId());
+        if (device == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!"AVAILABLE".equals(device.getStatus())) {
+            throw new BusinessException(ErrorCode.DEVICE_UNAVAILABLE);
+        }
+        if (!request.getStartTime().isBefore(request.getEndTime())) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
+        if (request.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
+
+        Reservation reservation = new Reservation();
+        reservation.setUserId(userId);
+        reservation.setDeviceId(request.getDeviceId());
+        reservation.setStartTime(request.getStartTime());
+        reservation.setEndTime(request.getEndTime());
+        reservation.setPurpose(request.getPurpose());
+        reservation.setStatus("PENDING");
+
+        reservationMapper.insert(reservation);
+        return reservation.getId();
     }
 
     public List<TimeSlotVO> occupiedSlots(Long deviceId, LocalDate date) {
