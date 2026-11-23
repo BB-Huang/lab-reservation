@@ -40,6 +40,16 @@ public class ReservationService {
         if (request.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.INVALID_PARAM);
         }
+        Long conflicts = reservationMapper.selectCount(
+                new LambdaQueryWrapper<Reservation>()
+                        .eq(Reservation::getDeviceId, request.getDeviceId())
+                        .in(Reservation::getStatus, "PENDING", "APPROVED")
+                        .lt(Reservation::getStartTime, request.getEndTime())
+                        .gt(Reservation::getEndTime, request.getStartTime()));
+
+        if (conflicts > 0) {
+            throw new BusinessException(ErrorCode.CONFLICT);
+        }
 
         Reservation reservation = new Reservation();
         reservation.setUserId(userId);
@@ -69,4 +79,6 @@ public class ReservationService {
                 .map(r -> new TimeSlotVO(r.getStartTime(), r.getEndTime()))
                 .toList();
     }
+
+
 }
