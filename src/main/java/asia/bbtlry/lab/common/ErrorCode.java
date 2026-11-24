@@ -7,15 +7,16 @@ public enum ErrorCode {
     // 4xxxx：客户端错误
     INVALID_PARAM(40001, "参数错误"),
     USERNAME_EXISTS(40002, "用户名已存在"),
+    CATEGORY_EXISTS(40003, "分类已存在"),
     DEVICE_STATUS_INVALID(40004,"设备状态不合法"),
+    DEVICE_UNAVAILABLE(40005, "设备当前不可预约"),
     UNAUTHORIZED(40101, "未登录或 token 无效"),
     LOGIN_FAILED(40102,"用户名或密码错误"),
     FORBIDDEN(40301, "无权访问该资源"),
     ACCOUNT_DISABLED(40302,"账号已被禁用"),
     NOT_FOUND(40401, "资源不存在"),
     CONFLICT(40901, "该时段已被预约"),
-    CATEGORY_EXISTS(40003, "分类已存在"),
-    DEVICE_UNAVAILABLE(40005, "设备当前不可预约"),
+    LOCK_BUSY(40902, "操作太频繁，请稍后重试"),
 
     // 5xxxx：服务端错误
     INTERNAL_ERROR(50001, "服务器内部错误");

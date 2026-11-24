@@ -9,21 +9,26 @@ import asia.bbtlry.lab.mapper.DeviceMapper;
 import asia.bbtlry.lab.mapper.ReservationMapper;
 import asia.bbtlry.lab.vo.TimeSlotVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ReservationService {
 
     private final ReservationMapper reservationMapper;
     private final DeviceMapper deviceMapper;
+    private final RedissonClient redissonClient;
 
-    public ReservationService(ReservationMapper reservationMapper, DeviceMapper deviceMapper) {
+    public ReservationService(ReservationMapper reservationMapper, DeviceMapper deviceMapper, RedissonClient redissonClient) {
         this.reservationMapper = reservationMapper;
         this.deviceMapper = deviceMapper;
+        this.redissonClient = redissonClient;
     }
 
     public Long create(CreateReservationRequest request, Long userId) {
@@ -40,27 +45,42 @@ public class ReservationService {
         if (request.getStartTime().isBefore(LocalDateTime.now())) {
             throw new BusinessException(ErrorCode.INVALID_PARAM);
         }
-        Long conflicts = reservationMapper.selectCount(
-                new LambdaQueryWrapper<Reservation>()
-                        .eq(Reservation::getDeviceId, request.getDeviceId())
-                        .in(Reservation::getStatus, "PENDING", "APPROVED")
-                        .lt(Reservation::getStartTime, request.getEndTime())
-                        .gt(Reservation::getEndTime, request.getStartTime()));
+        RLock lock = redissonClient.getLock("lock:device:" + request.getDeviceId());
+        boolean locked = false;
+        try {
+            locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
+            if (!locked) {
+                throw new BusinessException(ErrorCode.LOCK_BUSY);
+            }
 
-        if (conflicts > 0) {
-            throw new BusinessException(ErrorCode.CONFLICT);
+            Long conflicts = reservationMapper.selectCount(
+                    new LambdaQueryWrapper<Reservation>()
+                            .eq(Reservation::getDeviceId, request.getDeviceId())
+                            .in(Reservation::getStatus, "PENDING", "APPROVED")
+                            .lt(Reservation::getStartTime, request.getEndTime())
+                            .gt(Reservation::getEndTime, request.getStartTime()));
+            if (conflicts > 0) {
+                throw new BusinessException(ErrorCode.CONFLICT);
+            }
+
+            Reservation reservation = new Reservation();
+            reservation.setUserId(userId);
+            reservation.setDeviceId(request.getDeviceId());
+            reservation.setStartTime(request.getStartTime());
+            reservation.setEndTime(request.getEndTime());
+            reservation.setPurpose(request.getPurpose());
+            reservation.setStatus("PENDING");
+
+            reservationMapper.insert(reservation);
+            return reservation.getId();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException(ErrorCode.LOCK_BUSY);
+        } finally {
+            if (locked && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        Reservation reservation = new Reservation();
-        reservation.setUserId(userId);
-        reservation.setDeviceId(request.getDeviceId());
-        reservation.setStartTime(request.getStartTime());
-        reservation.setEndTime(request.getEndTime());
-        reservation.setPurpose(request.getPurpose());
-        reservation.setStatus("PENDING");
-
-        reservationMapper.insert(reservation);
-        return reservation.getId();
     }
 
     public List<TimeSlotVO> occupiedSlots(Long deviceId, LocalDate date) {
