@@ -7,11 +7,15 @@ import asia.bbtlry.lab.entity.Reservation;
 import asia.bbtlry.lab.exception.BusinessException;
 import asia.bbtlry.lab.mapper.DeviceMapper;
 import asia.bbtlry.lab.mapper.ReservationMapper;
+import asia.bbtlry.lab.vo.PageResult;
+import asia.bbtlry.lab.vo.ReservationVO;
 import asia.bbtlry.lab.vo.TimeSlotVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -100,5 +104,41 @@ public class ReservationService {
                 .toList();
     }
 
+    public PageResult<ReservationVO> myReservations(Long userId, int page, int size, String status) {
+        if (page < 1 || size < 1 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
 
+        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Reservation::getUserId, userId)
+                .eq(StringUtils.hasText(status), Reservation::getStatus, status)
+                .orderByDesc(Reservation::getCreatedAt);
+
+        Page<Reservation> result = reservationMapper.selectPage(new Page<>(page, size), wrapper);
+
+        List<ReservationVO> records = result.getRecords().stream()
+                .map(r -> new ReservationVO(
+                        r.getId(), r.getDeviceId(), r.getStartTime(), r.getEndTime(),
+                        r.getPurpose(), r.getStatus(), r.getReviewComment(), r.getCreatedAt()))
+                .toList();
+
+        return new PageResult<>(records, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    public void cancel(Long id, Long userId) {
+        Reservation reservation = reservationMapper.selectById(id);
+        if (reservation == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!reservation.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!"PENDING".equals(reservation.getStatus())
+                && !"APPROVED".equals(reservation.getStatus())) {
+            throw new BusinessException(ErrorCode.RESERVATION_STATUS_INVALID);
+        }
+
+        reservation.setStatus("CANCELLED");
+        reservationMapper.updateById(reservation);
+    }
 }

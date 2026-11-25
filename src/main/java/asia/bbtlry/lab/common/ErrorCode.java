@@ -10,6 +10,7 @@ public enum ErrorCode {
     CATEGORY_EXISTS(40003, "分类已存在"),
     DEVICE_STATUS_INVALID(40004,"设备状态不合法"),
     DEVICE_UNAVAILABLE(40005, "设备当前不可预约"),
+    RESERVATION_STATUS_INVALID(40006, "当前预约状态不允许该操作"),
     UNAUTHORIZED(40101, "未登录或 token 无效"),
     LOGIN_FAILED(40102,"用户名或密码错误"),
     FORBIDDEN(40301, "无权访问该资源"),
