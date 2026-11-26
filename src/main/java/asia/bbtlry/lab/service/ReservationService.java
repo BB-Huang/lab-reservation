@@ -117,12 +117,33 @@ public class ReservationService {
         Page<Reservation> result = reservationMapper.selectPage(new Page<>(page, size), wrapper);
 
         List<ReservationVO> records = result.getRecords().stream()
-                .map(r -> new ReservationVO(
-                        r.getId(), r.getDeviceId(), r.getStartTime(), r.getEndTime(),
-                        r.getPurpose(), r.getStatus(), r.getReviewComment(), r.getCreatedAt()))
+                .map(this::toVO)
                 .toList();
 
         return new PageResult<>(records, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    public PageResult<ReservationVO> pending(int page, int size) {
+        if (page < 1 || size < 1 || size > 100) {
+            throw new BusinessException(ErrorCode.INVALID_PARAM);
+        }
+
+        LambdaQueryWrapper<Reservation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Reservation::getStatus, "PENDING")
+                .orderByAsc(Reservation::getStartTime);
+
+        Page<Reservation> result = reservationMapper.selectPage(new Page<>(page, size), wrapper);
+        List<ReservationVO> records = result.getRecords().stream()
+                .map(this::toVO)
+                .toList();
+
+        return new PageResult<>(records, result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    private ReservationVO toVO(Reservation r) {
+        return new ReservationVO(r.getId(), r.getDeviceId(),
+                r.getStartTime(), r.getEndTime(), r.getPurpose(),
+                r.getStatus(), r.getReviewComment(), r.getCreatedAt());
     }
 
     public void cancel(Long id, Long userId) {
@@ -139,6 +160,32 @@ public class ReservationService {
         }
 
         reservation.setStatus("CANCELLED");
+        reservationMapper.updateById(reservation);
+    }
+
+    private Reservation getPendingReservation(Long id) {
+        Reservation reservation = reservationMapper.selectById(id);
+        if (reservation == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!"PENDING".equals(reservation.getStatus())) {
+            throw new BusinessException(ErrorCode.RESERVATION_STATUS_INVALID);
+        }
+        return reservation;
+    }
+
+    public void approve(Long id, Long reviewerId) {
+        Reservation reservation = getPendingReservation(id);
+        reservation.setStatus("APPROVED");
+        reservation.setReviewerId(reviewerId);
+        reservationMapper.updateById(reservation);
+    }
+
+    public void reject(Long id, Long reviewerId, String comment) {
+        Reservation reservation = getPendingReservation(id);
+        reservation.setStatus("REJECTED");
+        reservation.setReviewerId(reviewerId);
+        reservation.setReviewComment(comment);
         reservationMapper.updateById(reservation);
     }
 }

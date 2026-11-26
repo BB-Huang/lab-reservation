@@ -2,10 +2,12 @@ package asia.bbtlry.lab.controller;
 
 import asia.bbtlry.lab.common.Result;
 import asia.bbtlry.lab.dto.CreateReservationRequest;
+import asia.bbtlry.lab.dto.ReviewRequest;
 import asia.bbtlry.lab.service.ReservationService;
 import asia.bbtlry.lab.vo.PageResult;
 import asia.bbtlry.lab.vo.ReservationVO;
 import jakarta.validation.Valid;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +39,31 @@ public class ReservationController {
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable Long id, @AuthenticationPrincipal Long userId) {
         reservationService.cancel(id, userId);
+        return Result.success();
+    }
+
+    @GetMapping("/pending")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public Result<PageResult<ReservationVO>> pending(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return Result.success(reservationService.pending(page, size));
+    }
+
+    @PutMapping("/{id}/approve")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public Result<Void> approve(@PathVariable Long id,
+                                @AuthenticationPrincipal Long reviewerId) {
+        reservationService.approve(id, reviewerId);
+        return Result.success();
+    }
+
+    @PutMapping("/{id}/reject")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    public Result<Void> reject(@PathVariable Long id,
+                               @AuthenticationPrincipal Long reviewerId,
+                               @RequestBody(required = false) ReviewRequest request) {
+        reservationService.reject(id, reviewerId, request == null ? null : request.getComment());
         return Result.success();
     }
 }
