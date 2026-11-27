@@ -188,4 +188,15 @@ public class ReservationService {
         reservation.setReviewComment(comment);
         reservationMapper.updateById(reservation);
     }
+
+    public ReservationVO getDetail(Long id, Long userId, boolean isAdmin) {
+        Reservation reservation = reservationMapper.selectById(id);
+        if (reservation == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND);
+        }
+        if (!reservation.getUserId().equals(userId) && !isAdmin) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        return toVO(reservation);
+    }
 }

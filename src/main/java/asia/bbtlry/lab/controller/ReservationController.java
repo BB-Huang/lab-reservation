@@ -8,6 +8,7 @@ import asia.bbtlry.lab.vo.PageResult;
 import asia.bbtlry.lab.vo.ReservationVO;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,5 +66,14 @@ public class ReservationController {
                                @RequestBody(required = false) ReviewRequest request) {
         reservationService.reject(id, reviewerId, request == null ? null : request.getComment());
         return Result.success();
+    }
+
+    @GetMapping("/{id}")
+    public Result<ReservationVO> detail(@PathVariable Long id,
+                                        @AuthenticationPrincipal Long userId,
+                                        Authentication authentication) {
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+        return Result.success(reservationService.getDetail(id, userId, isAdmin));
     }
 }
