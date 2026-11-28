@@ -100,6 +100,13 @@ MySQL 首次启动需要 20–40 秒。默认账号仅用于本地开发，不�
 | PUT | `/api/devices/{id}` | 修改设备 | 管理员 |
 | DELETE | `/api/devices/{id}` | 删除设备 | 管理员 |
 | GET | `/api/devices/{id}/availability?date=YYYY-MM-DD` | 某日已占用时段 | 登录 |
+| POST | `/api/reservations` | 创建预约（冲突检测 + 分布式锁） | 登录 |
+| GET | `/api/reservations/mine` | 我的预约（`page` / `size` / `status`） | 登录 |
+| GET | `/api/reservations/{id}` | 预约详情 | 本人或管理员 |
+| PUT | `/api/reservations/{id}/cancel` | 取消预约 | 本人 |
+| GET | `/api/reservations/pending` | 待审批列表 | 教师 / 管理员 |
+| PUT | `/api/reservations/{id}/approve` | 审批通过 | 教师 / 管理员 |
+| PUT | `/api/reservations/{id}/reject` | 审批驳回 | 教师 / 管理员 |
 
 除公开接口外，请求头需带 `Authorization: Bearer <token>`。
 
@@ -109,5 +116,5 @@ MySQL 首次启动需要 20–40 秒。默认账号仅用于本地开发，不�
 | --- | --- | --- |
 | 第 1 周 | 环境 + 用户模块（注册 / 登录 / JWT） | ✅ 完成 |
 | 第 2 周 | 设备 + 分类 + 权限 | ✅ 完成 |
-| 第 3 周 | 预约 + 冲突检测 + 分布式锁 + 审批 | ⬜ |
+| 第 3 周 | 预约 + 冲突检测 + 分布式锁 + 审批 | ✅ 完成 |
 | 第 4 周 | 统计 + 部署 + 压测 + 文档 | ⬜ |
